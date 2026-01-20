@@ -87,3 +87,60 @@ else:
             st.image(img, use_container_width=True)
             if memo_text:
                 st.caption("📝 " + memo_text)
+                import streamlit as st
+from PIL import Image
+import os
+
+SAVE_DIR = "baby_photos"
+
+st.subheader("🧸 아기 사진 갤러리")
+
+files = sorted(
+    [f for f in os.listdir(SAVE_DIR) if f.lower().endswith(("png", "jpg", "jpeg"))],
+    reverse=True
+)
+
+if not files:
+    st.info("아직 사진이 없어요 🥺 첫 추억을 남겨보세요!")
+else:
+    cols = st.columns(3)
+
+    for idx, file in enumerate(files):
+        img_path = os.path.join(SAVE_DIR, file)
+        memo_path = img_path + ".txt"
+
+        with cols[idx % 3]:
+            img = Image.open(img_path)
+            st.image(img, use_container_width=True)
+
+            # 메모 표시
+            if os.path.exists(memo_path):
+                with open(memo_path, "r", encoding="utf-8") as f:
+                    st.caption("📝 " + f.read())
+
+            # 삭제 버튼
+            delete_key = f"delete_{file}"
+            confirm_key = f"confirm_{file}"
+
+            if st.button("🗑️ 삭제", key=delete_key):
+                st.session_state[confirm_key] = True
+
+            # 삭제 확인
+            if st.session_state.get(confirm_key):
+                st.warning("⚠️ 정말 삭제할까요? (되돌릴 수 없어요 🥺)")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    if st.button("❌ 취소", key=f"cancel_{file}"):
+                        st.session_state[confirm_key] = False
+
+                with col2:
+                    if st.button("✅ 삭제할래요", key=f"yes_{file}"):
+                        os.remove(img_path)
+                        if os.path.exists(memo_path):
+                            os.remove(memo_path)
+
+                        st.success("🧹 추억이 삭제되었어요")
+                        st.session_state.pop(confirm_key, None)
+                        st.rerun()
+
