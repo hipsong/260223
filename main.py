@@ -2,6 +2,31 @@ import streamlit as st
 from PIL import Image
 import os
 from datetime import datetime
+import streamlit as st
+
+APP_PASSWORD = "1234"  # 👈 가족 암호
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+def login():
+    st.markdown("## 🔐 우리 가족 전용 아기 앨범 👶💕")
+    password = st.text_input(
+        "암호를 입력하세요 🗝️",
+        type="password"
+    )
+
+    if st.button("👨‍👩‍👦 입장하기"):
+        if password == APP_PASSWORD:
+            st.session_state.authenticated = True
+            st.success("💖 환영해요, 가족 여러분!")
+            st.rerun()
+        else:
+            st.error("❌ 암호가 틀렸어요")
+
+if not st.session_state.authenticated:
+    login()
+    st.stop()  # ⛔ 여기서 앱 전체 중단
 
 # ---------------------------
 # 기본 설정
