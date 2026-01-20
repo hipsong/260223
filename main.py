@@ -4,14 +4,6 @@ import os
 from datetime import datetime
 import streamlit as st
 
-st.title("🎵 오디오 테스트")
-
-st.write("아래 버튼을 누르면 음악이 나야 정상입니다.")
-
-if st.button("▶️ 음악 재생"):
-    st.audio(
-        "https://www.youtube.com/watch?v=LEApBuUzWmo&list=RDLEApBuUzWmo&start_radio=1"
-    )
 APP_PASSWORD = "1234"  # 👈 가족 암호
 
 if "authenticated" not in st.session_state:
