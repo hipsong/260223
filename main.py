@@ -3,11 +3,6 @@ from PIL import Image
 import os
 from datetime import datetime
 import streamlit as st
-st.title("👶 아기 앨범 🎵")
-
-if st.button("🎵 음악 켜기"):
-    audio_file = open("music/lullaby.mp3", "rb")
-    st.audio(audio_file.read(), format="audio/mp3")
 
 APP_PASSWORD = "1234"  # 👈 가족 암호
 
