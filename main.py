@@ -10,7 +10,7 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 def login():
-    st.markdown("## 🔐 우리 가족 전용 아기 앨범 👶💕")
+    st.markdown("## 🔐 깜짝이 가족 앨범 👶💕")
     password = st.text_input(
         "암호를 입력하세요 🗝️",
         type="password"
@@ -32,7 +32,7 @@ if not st.session_state.authenticated:
 # 기본 설정
 # ---------------------------
 st.set_page_config(
-    page_title="👶 우리 아기 추억 앨범",
+    page_title="👶 깜짝이 추억 앨범",
     page_icon="🍼",
     layout="centered"
 )
@@ -45,7 +45,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 # ---------------------------
 st.markdown(
     """
-    <h1 style='text-align: center;'>👶🍼 우리 아기 추억 앨범 💕</h1>
+    <h1 style='text-align: center;'>👶🍼 깜짝이 추억 앨범 💕</h1>
     <p style='text-align: center; font-size:18px;'>
     아빠가 사랑으로 만든 사진 보관함 📸✨
     </p>
