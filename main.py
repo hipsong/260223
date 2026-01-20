@@ -155,4 +155,11 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+st.markdown("### 🎵 배경 음악")
+
+music_on = st.checkbox("음악 켜기 🎶", value=True)
+
+if music_on:
+    with open("music/lullaby.mp3", "rb") as audio_file:
+        st.audio(audio_file.read(), format="audio/mp3", loop=True)
 
