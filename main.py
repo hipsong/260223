@@ -160,6 +160,7 @@ st.markdown("### 🎵 배경 음악")
 music_on = st.checkbox("음악 켜기 🎶", value=True)
 
 if music_on:
-    with open("music/lullaby.mp3", "rb") as audio_file:
-        st.audio(audio_file.read(), format="audio/mp3", loop=True)
-
+    st.audio(
+        "https://cdn.pixabay.com/download/audio/2022/10/03/audio_5f5b1e5b8b.mp3",
+        loop=True
+    )
