@@ -140,4 +140,19 @@ else:
                         st.success("🧹 추억이 삭제되었어요")
                         st.session_state.pop(confirm_key, None)
                         st.rerun()
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(
+            180deg,
+            #FFF1F8 0%,
+            #E8F6FF 50%,
+            #FFFFFF 100%
+        );
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
