@@ -159,11 +159,4 @@ import streamlit as st
 
 st.title("👶 아기 앨범 테스트 🎶")
 
-if st.button("🎵 음악 재생"):
-    st.audio(
-        "https://cdn.pixabay.com/download/audio/2022/10/03/audio_5f5b1e5b8b.mp3",
-        format="audio/mp3",
-        loop=True
-    )
 
-    )
