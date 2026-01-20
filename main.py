@@ -155,12 +155,15 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-st.markdown("### 🎵 배경 음악")
+import streamlit as st
 
-music_on = st.checkbox("음악 켜기 🎶", value=True)
+st.title("👶 아기 앨범 테스트 🎶")
 
-if music_on:
+if st.button("🎵 음악 재생"):
     st.audio(
         "https://cdn.pixabay.com/download/audio/2022/10/03/audio_5f5b1e5b8b.mp3",
+        format="audio/mp3",
         loop=True
+    )
+
     )
