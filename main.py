@@ -10,8 +10,7 @@ st.write("아래 버튼을 누르면 음악이 나야 정상입니다.")
 
 if st.button("▶️ 음악 재생"):
     st.audio(
-        "https://cdn.pixabay.com/download/audio/2022/10/03/audio_5f5b1e5b8b.mp3",
-        format="audio/mp3"
+        "https://www.youtube.com/watch?v=LEApBuUzWmo&list=RDLEApBuUzWmo&start_radio=1"
     )
 APP_PASSWORD = "1234"  # 👈 가족 암호
 
