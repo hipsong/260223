@@ -63,35 +63,7 @@ st.divider()
 # ---------------------------
 # 갤러리
 # ---------------------------
-st.subheader("🧸 아기 사진 갤러리")
 
-files = sorted(
-    [f for f in os.listdir(SAVE_DIR) if f.lower().endswith(("png", "jpg", "jpeg"))],
-    reverse=True
-)
-
-if not files:
-    st.info("아직 사진이 없어요 🥺 첫 추억을 남겨보세요!")
-else:
-    cols = st.columns(3)
-    for idx, file in enumerate(files):
-        img = Image.open(os.path.join(SAVE_DIR, file))
-
-        memo_file = os.path.join(SAVE_DIR, file + ".txt")
-        memo_text = ""
-        if os.path.exists(memo_file):
-            with open(memo_file, "r", encoding="utf-8") as f:
-                memo_text = f.read()
-
-        with cols[idx % 3]:
-            st.image(img, use_container_width=True)
-            if memo_text:
-                st.caption("📝 " + memo_text)
-                import streamlit as st
-from PIL import Image
-import os
-
-SAVE_DIR = "baby_photos"
 
 st.subheader("🧸 아기 사진 갤러리")
 
