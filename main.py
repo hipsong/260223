@@ -183,13 +183,35 @@ for idx, item in enumerate(data):
             save_data(data)
             st.rerun()
 
-    # 삭제 (업로더만)
-    if user == item["uploader"]:
+# 삭제 (업로더만, 확인 단계 포함)
+if user == item["uploader"]:
+
+    confirm_key = f"confirm_delete_{idx}"
+
+    # 1단계: 삭제 버튼
+    if not st.session_state.get(confirm_key, False):
         if st.button("🗑️ 사진 삭제", key=f"del_{idx}"):
-            os.remove(os.path.join(PHOTO_DIR, item["file"]))
-            data.pop(idx)
-            save_data(data)
-            st.rerun()
+            st.session_state[confirm_key] = True
+            st.warning("⚠️ 정말 삭제하시겠습니까? (되돌릴 수 없어요)")
+
+    # 2단계: 확인 / 취소
+    else:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("❌ 취소", key=f"cancel_{idx}"):
+                st.session_state[confirm_key] = False
+                st.info("삭제가 취소되었습니다")
+
+        with col2:
+            if st.button("✅ 삭제할게요", key=f"yes_{idx}"):
+                os.remove(os.path.join(PHOTO_DIR, item["file"]))
+                data.pop(idx)
+                save_data(data)
+                st.session_state.pop(confirm_key, None)
+                st.success("🧹 사진이 삭제되었습니다")
+                st.rerun()
+
 
     st.markdown("</div>", unsafe_allow_html=True)
 
