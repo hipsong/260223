@@ -71,7 +71,7 @@ if not st.session_state.auth:
     st.title("🔐 우리 가족 전용 공간")
     pw = st.text_input("암호를 입력하세요", type="password")
     if st.button("입장하기 💕"):
-        if pw == PASSWORD:
+        if pw == PASSWORD:"0223"
             st.session_state.auth = True
             st.experimental_rerun()
         else:
