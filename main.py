@@ -1,7 +1,10 @@
 import streamlit as st
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+KST = timezone(timedelta(hours=9))
+
 
 # =====================
 # 설정
@@ -110,8 +113,8 @@ photo = st.file_uploader("사진 선택", type=["jpg", "png", "jpeg"])
 
 if st.button("업로드 ✨"):
     if photo:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name}"
+        now = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
+        filename = f"{datetime.now(KST).strftime('%Y%m%d%H%M%S')}_{photo.name}"
         path = os.path.join(PHOTO_DIR, filename)
 
         with open(path, "wb") as f:
@@ -175,7 +178,7 @@ for idx, item in enumerate(data):
         if comment:
             item["comments"].append({
                 "text": f"{user}: {comment}",
-                "time": datetime.now().strftime("%Y-%m-%d %H:%M")
+                "time": datetime.now(KST).strftime("%Y-%m-%d %H:%M")
             })
             save_data(data)
             st.rerun()
