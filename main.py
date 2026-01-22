@@ -6,6 +6,9 @@ from datetime import datetime
 # =====================
 # 설정
 # =====================
+st.write("")
+st.write("")
+
 st.set_page_config(
     page_title="👶 깜짝이 앨범",
     page_icon="🍼",
@@ -47,6 +50,9 @@ st.markdown("""
 # =====================
 # 로그인
 # =====================
+st.write("")
+st.write("")
+
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -88,6 +94,9 @@ data = sorted(data, key=lambda x: x["time"], reverse=True)
 # =====================
 # 헤더
 # =====================
+st.write("")
+st.write("")
+
 st.title("👶 깜짝이 추억 앨범 💖")
 st.caption("사진과 댓글이 시간순으로 쌓여요 ⏳")
 
