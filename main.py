@@ -157,6 +157,6 @@ st.markdown(
 )
 import streamlit as st
 
-st.title("👶 아기 앨범 테스트 🎶")
+st.title("👶 아기 앨범 🎶")
 
 
