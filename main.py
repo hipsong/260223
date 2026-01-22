@@ -210,9 +210,9 @@ if user == item["uploader"]:
                 st.rerun()
     for idx, item in enumerate(data):
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.image(
+        st.image(
         os.path.join(PHOTO_DIR, item["file"]),
         use_container_width=True
     )
