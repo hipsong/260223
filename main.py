@@ -1,5 +1,6 @@
 import streamlit as st
-import os, json
+import os
+import json
 from datetime import datetime, timezone, timedelta
 
 # =====================
@@ -30,67 +31,21 @@ if not os.path.exists(DATA_FILE):
         json.dump([], f)
 
 # =====================
-# 🎨 UI CSS (요즘 감성)
+# 기본 CSS (최소)
 # =====================
 st.markdown("""
 <style>
-.stApp {
-    background-color: #f5f6f8;
-    font-family: -apple-system, BlinkMacSystemFont, "Pretendard",
-                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.block-container {
-    padding: 1rem;
-}
-
-.post-card {
+.block-container { padding: 1rem; }
+.card {
     background: #ffffff;
-    padding: 16px;
-    border-radius: 20px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.08);
-    margin-bottom: 24px;
+    padding: 14px;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
 }
-
-.header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.uploader {
-    font-weight: 600;
-    font-size: 15px;
-}
-
 .time {
-    font-size: 12px;
+    font-size: 11px;
     color: #888;
-}
-
-.desc {
-    font-size: 15px;
-    margin-top: 6px;
-}
-
-.comment {
-    font-size: 14px;
-    margin-top: 6px;
-    color: #444;
-}
-
-.delete-text {
-    color: #ff4d4f;
-    font-size: 13px;
-    background: none;
-    border: none;
-    padding: 0;
-}
-
-.confirm-box {
-    margin-top: 8px;
-    font-size: 14px;
-    color: #d33;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -108,7 +63,7 @@ if not st.session_state.authenticated:
     st.title("🔐 우리 가족만 들어와요")
 
     pw = st.text_input("암호", type="password")
-    name = st.text_input("이름")
+    name = st.text_input("이름 (댓글/업로드용)")
 
     if st.button("입장 💕"):
         if pw == PASSWORD and name:
@@ -133,22 +88,25 @@ def save_data(d):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(d, f, ensure_ascii=False, indent=2)
 
-data = sorted(load_data(), key=lambda x: x["time"], reverse=True)
+data = load_data()
+data = sorted(data, key=lambda x: x["time"], reverse=True)
 
 # =====================
 # 헤더
 # =====================
 st.title("👶 깜짝이 추억 앨범 💖")
-st.caption("시간이 지나면 더 소중해질 기록들")
+st.caption("사진과 댓글이 시간순으로 쌓여요 ⏳")
 
 # =====================
-# 업로드
+# 사진 업로드
 # =====================
-with st.expander("📸 사진 올리기"):
-    desc = st.text_input("사진 한마디")
-    photo = st.file_uploader("사진 선택", type=["jpg","png","jpeg"])
+st.subheader("📸 사진 올리기")
 
-    if st.button("업로드 ✨") and photo:
+desc = st.text_input("사진 한마디")
+photo = st.file_uploader("사진 선택", type=["jpg", "png", "jpeg"])
+
+if st.button("업로드 ✨"):
+    if photo:
         now = datetime.now(KST)
         filename = f"{now.strftime('%Y%m%d%H%M%S')}_{photo.name}"
 
@@ -164,32 +122,39 @@ with st.expander("📸 사진 올리기"):
         })
 
         save_data(data)
+        st.success("업로드 완료 💕")
         st.rerun()
+    else:
+        st.warning("사진을 선택해 주세요")
 
 st.divider()
 
 # =====================
-# 🕒 타임라인 (for문 1개)
+# 갤러리 (for문 하나!)
 # =====================
-for idx, item in enumerate(data):
-    st.markdown("<div class='post-card'>", unsafe_allow_html=True)
+st.subheader("🕒 사진 타임라인")
 
-    st.markdown(
-        f"""
-        <div class='header-row'>
-            <div class='uploader'>👤 {item['uploader']}</div>
-            <div class='time'>📅 {item['time']}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
+if not data:
+    st.info("아직 사진이 없어요 😊")
+
+for idx, item in enumerate(data):
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    st.image(
+        os.path.join(PHOTO_DIR, item["file"]),
+        use_container_width=True
     )
 
-    st.image(os.path.join(PHOTO_DIR, item["file"]), use_container_width=True)
+    st.markdown(f"**👤 {item['uploader']}**")
+    st.markdown(
+        f"<div class='time'>📅 {item['time']}</div>",
+        unsafe_allow_html=True
+    )
 
     # 설명
     if user == item["uploader"]:
         new_desc = st.text_input(
-            "설명",
+            "✏️ 설명 수정",
             value=item["desc"],
             key=f"desc_{idx}"
         )
@@ -198,35 +163,34 @@ for idx, item in enumerate(data):
             save_data(data)
             st.rerun()
     else:
-        st.markdown(f"<div class='desc'>📝 {item['desc']}</div>",
-                    unsafe_allow_html=True)
+        st.write(f"📝 {item['desc']}")
 
     # 댓글
+    st.markdown("💬 댓글")
     for c in item["comments"]:
-        st.markdown(
-            f"<div class='comment'>💬 {c['text']} <span class='time'>({c['time']})</span></div>",
-            unsafe_allow_html=True
-        )
+        st.write(f"- {c['text']} ({c['time']})")
 
     comment = st.text_input("댓글 쓰기", key=f"cmt_{idx}")
-    if st.button("댓글 추가", key=f"addc_{idx}") and comment:
-        item["comments"].append({
-            "text": f"{user}: {comment}",
-            "time": datetime.now(KST).strftime("%Y-%m-%d %H:%M")
-        })
-        save_data(data)
-        st.rerun()
+    if st.button("댓글 추가", key=f"addc_{idx}"):
+        if comment:
+            item["comments"].append({
+                "text": f"{user}: {comment}",
+                "time": datetime.now(KST).strftime("%Y-%m-%d %H:%M")
+            })
+            save_data(data)
+            st.rerun()
 
-    # ---------------- 삭제 (SNS 스타일)
+    # =====================
+    # 삭제 (업로더만 / 확인 포함)
+    # =====================
     if user == item["uploader"]:
         confirm_key = f"confirm_{idx}"
 
-        if st.button("🗑️ 삭제", key=f"del_{idx}", help="사진 삭제"):
+        if st.button("🗑️ 사진 삭제", key=f"del_{idx}"):
             st.session_state[confirm_key] = True
 
-        if st.session_state.get(confirm_key):
-            st.markdown("<div class='confirm-box'>이 사진을 삭제할까요?</div>",
-                        unsafe_allow_html=True)
+        if st.session_state.get(confirm_key, False):
+            st.warning("정말 삭제하시겠습니까?")
 
             col1, col2 = st.columns(2)
             with col1:
@@ -237,9 +201,11 @@ for idx, item in enumerate(data):
                     os.remove(os.path.join(PHOTO_DIR, item["file"]))
                     data.pop(idx)
                     save_data(data)
+                    st.session_state.pop(confirm_key, None)
                     st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
