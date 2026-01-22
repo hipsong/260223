@@ -1,243 +1,195 @@
 import streamlit as st
-from PIL import Image
 import os
+import json
 from datetime import datetime
 
-# ===========================
-# ⚙️ 페이지 설정 (반드시 맨 위)
-# ===========================
+# =====================
+# 기본 설정
+# =====================
 st.set_page_config(
-    page_title="👶 깜짝이 추억 앨범",
-    page_icon="🍼",
-    layout="centered"
+    page_title="👶 깜짝이 앨범",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# ===========================
-# 🔐 가족 암호
-# ===========================
-APP_PASSWORD = "1234"
+PASSWORD = "family123"
+DATA_FILE = "data.json"
+PHOTO_DIR = "photos"
 
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+os.makedirs(PHOTO_DIR, exist_ok=True)
 
-# ===========================
-# 🔐 로그인 (이름 + 암호)
-# ===========================
-def login():
-    st.markdown("## 🔐 👨‍👩‍👦 깜짝이 가족 앨범 입장 💕")
+if not os.path.exists(DATA_FILE):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump([], f)
 
-    user_name = st.text_input("이름을 입력하세요 👤", placeholder="예: 아빠")
-    password = st.text_input("암호를 입력하세요 🗝️", type="password")
+# =====================
+# CSS (모바일 최적화)
+# =====================
+st.markdown("""
+<style>
+/* 모바일 여백 제거 */
+.block-container {
+    padding: 1rem 0.8rem;
+}
 
-    if st.button("🚪 입장하기"):
-        if user_name and password == APP_PASSWORD:
-            st.session_state.authenticated = True
-            st.session_state.user_name = user_name
-            st.success(f"💖 환영해요, {user_name}님!")
-            st.rerun()
+/* 카드 느낌 */
+.photo-card {
+    background: white;
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 18px;
+}
+
+/* 버튼 작게 */
+.small-btn button {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+}
+
+/* 설명 글씨 */
+.desc {
+    font-size: 14px;
+}
+
+/* 타임라인 */
+.time {
+    font-size: 11px;
+    color: #888;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =====================
+# 로그인
+# =====================
+if "auth" not in st.session_state:
+    st.session_state.auth = False
+
+if not st.session_state.auth:
+    st.title("🔐 우리 가족 전용 공간")
+    pw = st.text_input("암호를 입력하세요", type="password")
+    if st.button("입장하기 💕"):
+        if pw == PASSWORD:
+            st.session_state.auth = True
+            st.experimental_rerun()
         else:
-            st.error("❌ 이름 또는 암호가 틀렸어요")
-
-if not st.session_state.authenticated:
-    login()
+            st.error("암호가 틀렸어요 😢")
     st.stop()
 
-# ===========================
-# 📁 저장 폴더
-# ===========================
-SAVE_DIR = "baby_photos"
-os.makedirs(SAVE_DIR, exist_ok=True)
+# =====================
+# 데이터
+# =====================
+def load_data():
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-# ===========================
-# 🎀 제목
-# ===========================
-st.markdown(
-    """
-    <h1 style='text-align: center;'>👶🍼 깜짝이 추억 앨범 💕</h1>
-    <p style='text-align: center; font-size:18px;'>
-    가족의 사랑으로 기록하는 깜짝이의 하루 💖
-    </p>
-    """,
-    unsafe_allow_html=True
-)
+def save_data(d):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(d, f, ensure_ascii=False, indent=2)
 
-st.divider()
+data = load_data()
 
-# ===========================
-# 📸 사진 업로드
-# ===========================
+# 최신순 정렬
+data = sorted(data, key=lambda x: x["time"], reverse=True)
+
+# =====================
+# 헤더
+# =====================
+st.title("👶 깜짝이의 추억 앨범 💖")
+st.caption("사진 하나하나가 타임라인으로 쌓여요 ⏳")
+
+# =====================
+# 업로드
+# =====================
 st.subheader("📸 사진 올리기")
 
-uploaded_file = st.file_uploader(
-    "아기 사진을 선택해 주세요 💖",
-    type=["jpg", "jpeg", "png"]
-)
+name = st.text_input("🙋 이름")
+desc = st.text_input("📝 사진 한마디")
+photo = st.file_uploader("사진 선택", type=["jpg", "png", "jpeg"])
 
-memo = st.text_input(
-    "📝 사진 문구 (선택)",
-    placeholder="예: 오늘 처음 웃은 날 😍"
-)
+if st.button("업로드 ✨"):
+    if name and photo:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{photo.name}"
+        path = os.path.join(PHOTO_DIR, filename)
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, use_container_width=True)
+        with open(path, "wb") as f:
+            f.write(photo.getbuffer())
 
-    if st.button("💾 추억 저장하기"):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{timestamp}_{uploaded_file.name}"
-        filepath = os.path.join(SAVE_DIR, filename)
-
-        image.save(filepath)
-
-        if memo:
-            with open(filepath + ".txt", "w", encoding="utf-8") as f:
-                f.write(memo)
-
-        with open(filepath + ".author", "w", encoding="utf-8") as f:
-            f.write(st.session_state.user_name)
-
-        st.success("🎉 저장 완료! 추억이 추가됐어요 💕")
+        data.append({
+            "file": filename,
+            "uploader": name,
+            "desc": desc,
+            "time": now,
+            "comments": []
+        })
+        save_data(data)
+        st.success("업로드 완료 💕")
+        st.experimental_rerun()
+    else:
+        st.warning("이름과 사진은 꼭 필요해요!")
 
 st.divider()
 
-# ===========================
-# 🧸 갤러리
-# ===========================
-st.subheader("🧸 아기 사진 갤러리")
+# =====================
+# 갤러리 (모바일 친화)
+# =====================
+st.subheader("🕒 사진 타임라인")
 
-files = sorted(
-    [f for f in os.listdir(SAVE_DIR) if f.lower().endswith(("jpg", "jpeg", "png"))],
-    reverse=True
-)
+for idx, item in enumerate(data):
+    st.markdown('<div class="photo-card">', unsafe_allow_html=True)
 
-if not files:
-    st.info("아직 사진이 없어요 🥺")
-else:
-    cols = st.columns(2)
+    st.image(os.path.join(PHOTO_DIR, item["file"]), use_column_width=True)
 
-    for idx, file in enumerate(files):
-        img_path = os.path.join(SAVE_DIR, file)
-        memo_path = img_path + ".txt"
-        author_path = img_path + ".author"
-        comment_path = img_path + "_comments.txt"
+    st.markdown(f"**👤 {item['uploader']}**")
+    st.markdown(f"<div class='time'>📅 {item['time']}</div>", unsafe_allow_html=True)
 
-        with cols[idx % 2]:
-            st.image(Image.open(img_path), use_container_width=True)
+    # 설명
+    if name == item["uploader"]:
+        new_desc = st.text_input(
+            "✏️ 설명 수정",
+            value=item["desc"],
+            key=f"desc_{idx}"
+        )
+        st.markdown('<div class="small-btn">', unsafe_allow_html=True)
+        if st.button("저장", key=f"save_{idx}"):
+            item["desc"] = new_desc
+            save_data(data)
+            st.experimental_rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='desc'>📝 {item['desc']}</div>", unsafe_allow_html=True)
 
-            # 작성자
-            author = "알 수 없음"
-            if os.path.exists(author_path):
-                with open(author_path, "r", encoding="utf-8") as f:
-                    author = f.read().strip()
+    # 댓글
+    st.markdown("💬 댓글")
+    for c in item["comments"]:
+        st.markdown(f"- {c['text']}  <span class='time'>({c['time']})</span>", unsafe_allow_html=True)
 
-            st.caption(f"✍️ 업로드: {author}")
+    comment = st.text_input("댓글 남기기", key=f"cmt_{idx}")
+    st.markdown('<div class="small-btn">', unsafe_allow_html=True)
+    if st.button("댓글 추가", key=f"addc_{idx}"):
+        if comment:
+            item["comments"].append({
+                "text": f"{name}: {comment}",
+                "time": datetime.now().strftime("%Y-%m-%d %H:%M")
+            })
+            save_data(data)
+            st.experimental_rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-            # 문구
-            current_memo = ""
-            if os.path.exists(memo_path):
-                with open(memo_path, "r", encoding="utf-8") as f:
-                    current_memo = f.read()
+    # 삭제
+    if name == item["uploader"]:
+        st.markdown('<div class="small-btn">', unsafe_allow_html=True)
+        if st.button("🗑️ 사진 삭제", key=f"del_{idx}"):
+            os.remove(os.path.join(PHOTO_DIR, item["file"]))
+            data.pop(idx)
+            save_data(data)
+            st.experimental_rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-            if author == st.session_state.user_name:
-                new_memo = st.text_area(
-                    "📝 사진 문구",
-                    value=current_memo,
-                    key=f"memo_{file}"
-                )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-                if st.button("✏️ 문구 저장", key=f"save_{file}"):
-                    if new_memo.strip():
-                        with open(memo_path, "w", encoding="utf-8") as f:
-                            f.write(new_memo)
-                        st.success("문구가 수정됐어요 💖")
-                    else:
-                        if os.path.exists(memo_path):
-                            os.remove(memo_path)
-                        st.info("문구가 삭제됐어요")
-            else:
-                if current_memo:
-                    st.caption("📝 " + current_memo)
-                st.caption("🔒 작성자만 수정 가능")
-
-            st.markdown("---")
-
-            # ===========================
-            # 🗑️ 사진 삭제 (작성자만 + 확인)
-            # ===========================
-            if author == st.session_state.user_name:
-                delete_key = f"delete_{file}"
-                confirm_key = f"confirm_{file}"
-
-                if st.button("🗑️ 사진 삭제", key=delete_key):
-                    st.session_state[confirm_key] = True
-
-                if st.session_state.get(confirm_key):
-                    st.warning("⚠️ 정말 삭제할까요? (되돌릴 수 없어요)")
-                    c1, c2 = st.columns(2)
-
-                    with c1:
-                        if st.button("❌ 취소", key=f"cancel_{file}"):
-                            st.session_state[confirm_key] = False
-
-                    with c2:
-                        if st.button("✅ 삭제", key=f"yes_{file}"):
-                            os.remove(img_path)
-                            if os.path.exists(memo_path):
-                                os.remove(memo_path)
-                            if os.path.exists(author_path):
-                                os.remove(author_path)
-                            if os.path.exists(comment_path):
-                                os.remove(comment_path)
-
-                            st.session_state.pop(confirm_key, None)
-                            st.success("🧹 사진이 삭제됐어요")
-                            st.rerun()
-
-            # ===========================
-            # 💬 댓글
-            # ===========================
-            st.markdown("💬 **가족 댓글**")
-
-            if os.path.exists(comment_path):
-                with open(comment_path, "r", encoding="utf-8") as f:
-                    comments = f.readlines()
-                for c in comments:
-                    st.markdown(f"- {c.strip()}")
-            else:
-                st.caption("아직 댓글이 없어요 😊")
-
-            comment = st.text_input(
-                "댓글 남기기 💖",
-                key=f"comment_{file}",
-                placeholder="너무 귀여워요 😍"
-            )
-
-            if st.button("💌 댓글 등록", key=f"add_comment_{file}"):
-                if comment.strip():
-                    with open(comment_path, "a", encoding="utf-8") as f:
-                        f.write(f"{st.session_state.user_name}: {comment}\n")
-                    st.success("댓글이 추가됐어요 💕")
-                    st.rerun()
-                else:
-                    st.warning("댓글을 입력해 주세요")
-
-# ===========================
-# 🌈 몽글몽글 배경
-# ===========================
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background: linear-gradient(
-            180deg,
-            #FFF1F8 0%,
-            #E8F6FF 50%,
-            #FFFFFF 100%
-        );
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
 
