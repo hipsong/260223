@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-PASSWORD = "family123"
+PASSWORD = "0223"
 DATA_FILE = "data.json"
 PHOTO_DIR = "photos"
 
