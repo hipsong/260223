@@ -1,6 +1,5 @@
 import streamlit as st
-import os
-import json
+import os, json
 from datetime import datetime, timezone, timedelta
 
 # =====================
@@ -31,23 +30,67 @@ if not os.path.exists(DATA_FILE):
         json.dump([], f)
 
 # =====================
-# CSS (모바일 최적화)
+# 🎨 UI CSS (요즘 감성)
 # =====================
 st.markdown("""
 <style>
+.stApp {
+    background-color: #f5f6f8;
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard",
+                 "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
 .block-container {
     padding: 1rem;
 }
-.card {
+
+.post-card {
     background: #ffffff;
-    padding: 14px;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 20px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
 }
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.uploader {
+    font-weight: 600;
+    font-size: 15px;
+}
+
 .time {
-    font-size: 11px;
+    font-size: 12px;
     color: #888;
+}
+
+.desc {
+    font-size: 15px;
+    margin-top: 6px;
+}
+
+.comment {
+    font-size: 14px;
+    margin-top: 6px;
+    color: #444;
+}
+
+.delete-text {
+    color: #ff4d4f;
+    font-size: 13px;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.confirm-box {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #d33;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -65,7 +108,7 @@ if not st.session_state.authenticated:
     st.title("🔐 우리 가족만 들어와요")
 
     pw = st.text_input("암호", type="password")
-    name = st.text_input("이름 (댓글/업로드용)")
+    name = st.text_input("이름")
 
     if st.button("입장 💕"):
         if pw == PASSWORD and name:
@@ -90,27 +133,24 @@ def save_data(d):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(d, f, ensure_ascii=False, indent=2)
 
-data = load_data()
-data = sorted(data, key=lambda x: x["time"], reverse=True)
+data = sorted(load_data(), key=lambda x: x["time"], reverse=True)
 
 # =====================
 # 헤더
 # =====================
 st.title("👶 깜짝이 추억 앨범 💖")
-st.caption("사진과 댓글이 시간순으로 쌓여요 ⏳")
+st.caption("시간이 지나면 더 소중해질 기록들")
 
 # =====================
-# 사진 업로드
+# 업로드
 # =====================
-st.subheader("📸 사진 올리기")
+with st.expander("📸 사진 올리기"):
+    desc = st.text_input("사진 한마디")
+    photo = st.file_uploader("사진 선택", type=["jpg","png","jpeg"])
 
-desc = st.text_input("사진 한마디")
-photo = st.file_uploader("사진 선택", type=["jpg", "png", "jpeg"])
-
-if st.button("업로드 ✨"):
-    if photo:
-        now = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
-        filename = f"{datetime.now(KST).strftime('%Y%m%d%H%M%S')}_{photo.name}"
+    if st.button("업로드 ✨") and photo:
+        now = datetime.now(KST)
+        filename = f"{now.strftime('%Y%m%d%H%M%S')}_{photo.name}"
 
         with open(os.path.join(PHOTO_DIR, filename), "wb") as f:
             f.write(photo.getbuffer())
@@ -119,44 +159,37 @@ if st.button("업로드 ✨"):
             "file": filename,
             "uploader": user,
             "desc": desc,
-            "time": now,
+            "time": now.strftime("%Y-%m-%d %H:%M"),
             "comments": []
         })
 
         save_data(data)
-        st.success("업로드 완료 💕")
         st.rerun()
-    else:
-        st.warning("사진을 선택해 주세요")
 
 st.divider()
 
 # =====================
-# 갤러리 (for문 단 하나!)
+# 🕒 타임라인 (for문 1개)
 # =====================
-st.subheader("🕒 사진 타임라인")
-
-if not data:
-    st.info("아직 사진이 없어요 😊")
-
 for idx, item in enumerate(data):
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("<div class='post-card'>", unsafe_allow_html=True)
 
-    st.image(
-        os.path.join(PHOTO_DIR, item["file"]),
-        use_container_width=True
-    )
-
-    st.markdown(f"**👤 {item['uploader']}**")
     st.markdown(
-        f"<div class='time'>📅 {item['time']}</div>",
+        f"""
+        <div class='header-row'>
+            <div class='uploader'>👤 {item['uploader']}</div>
+            <div class='time'>📅 {item['time']}</div>
+        </div>
+        """,
         unsafe_allow_html=True
     )
+
+    st.image(os.path.join(PHOTO_DIR, item["file"]), use_container_width=True)
 
     # 설명
     if user == item["uploader"]:
         new_desc = st.text_input(
-            "✏️ 설명 수정",
+            "설명",
             value=item["desc"],
             key=f"desc_{idx}"
         )
@@ -165,60 +198,48 @@ for idx, item in enumerate(data):
             save_data(data)
             st.rerun()
     else:
-        st.write(f"📝 {item['desc']}")
+        st.markdown(f"<div class='desc'>📝 {item['desc']}</div>",
+                    unsafe_allow_html=True)
 
     # 댓글
-    st.markdown("💬 댓글")
     for c in item["comments"]:
-        st.write(f"- {c['text']} ({c['time']})")
+        st.markdown(
+            f"<div class='comment'>💬 {c['text']} <span class='time'>({c['time']})</span></div>",
+            unsafe_allow_html=True
+        )
 
     comment = st.text_input("댓글 쓰기", key=f"cmt_{idx}")
-    if st.button("댓글 추가", key=f"addc_{idx}"):
-        if comment:
-            item["comments"].append({
-                "text": f"{user}: {comment}",
-                "time": datetime.now(KST).strftime("%Y-%m-%d %H:%M")
-            })
-            save_data(data)
-            st.rerun()
+    if st.button("댓글 추가", key=f"addc_{idx}") and comment:
+        item["comments"].append({
+            "text": f"{user}: {comment}",
+            "time": datetime.now(KST).strftime("%Y-%m-%d %H:%M")
+        })
+        save_data(data)
+        st.rerun()
 
-    # --------------------
-    # 삭제 (업로더만 / 원클릭 SNS 스타일)
-    # --------------------
+    # ---------------- 삭제 (SNS 스타일)
     if user == item["uploader"]:
         confirm_key = f"confirm_{idx}"
 
-        # 삭제 버튼 (한 번 클릭)
-        if st.button("🗑️ 삭제", key=f"del_{idx}"):
+        if st.button("🗑️ 삭제", key=f"del_{idx}", help="사진 삭제"):
             st.session_state[confirm_key] = True
 
-        # 즉시 확인 UI 표시
-        if st.session_state.get(confirm_key, False):
-            st.markdown(
-                "<div style='margin-top:6px; font-size:14px; color:#d33;'>"
-                "이 사진을 삭제하시겠어요?"
-                "</div>",
-                unsafe_allow_html=True
-            )
+        if st.session_state.get(confirm_key):
+            st.markdown("<div class='confirm-box'>이 사진을 삭제할까요?</div>",
+                        unsafe_allow_html=True)
 
             col1, col2 = st.columns(2)
-
             with col1:
                 if st.button("취소", key=f"cancel_{idx}"):
                     st.session_state[confirm_key] = False
-
             with col2:
                 if st.button("삭제", key=f"confirm_del_{idx}"):
                     os.remove(os.path.join(PHOTO_DIR, item["file"]))
                     data.pop(idx)
                     save_data(data)
-                    st.session_state.pop(confirm_key, None)
                     st.rerun()
 
-
     st.markdown("</div>", unsafe_allow_html=True)
-
-
 
 
 
