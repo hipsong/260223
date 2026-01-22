@@ -3,20 +3,22 @@ import os
 import json
 from datetime import datetime, timezone, timedelta
 
+# =====================
+# 시간대 (대한민국)
+# =====================
 KST = timezone(timedelta(hours=9))
 
-
 # =====================
-# 설정
+# 페이지 설정
 # =====================
-st.write("")
-st.write("")
-
 st.set_page_config(
     page_title="👶 깜짝이 앨범",
     page_icon="🍼",
     layout="centered"
 )
+
+st.write("")
+st.write("")
 
 PASSWORD = "0223"
 DATA_FILE = "data.json"
@@ -29,7 +31,7 @@ if not os.path.exists(DATA_FILE):
         json.dump([], f)
 
 # =====================
-# CSS (모바일 친화)
+# CSS (모바일 최적화)
 # =====================
 st.markdown("""
 <style>
@@ -53,9 +55,6 @@ st.markdown("""
 # =====================
 # 로그인
 # =====================
-st.write("")
-st.write("")
-
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -97,14 +96,11 @@ data = sorted(data, key=lambda x: x["time"], reverse=True)
 # =====================
 # 헤더
 # =====================
-st.write("")
-st.write("")
-
 st.title("👶 깜짝이 추억 앨범 💖")
 st.caption("사진과 댓글이 시간순으로 쌓여요 ⏳")
 
 # =====================
-# 업로드
+# 사진 업로드
 # =====================
 st.subheader("📸 사진 올리기")
 
@@ -115,9 +111,8 @@ if st.button("업로드 ✨"):
     if photo:
         now = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
         filename = f"{datetime.now(KST).strftime('%Y%m%d%H%M%S')}_{photo.name}"
-        path = os.path.join(PHOTO_DIR, filename)
 
-        with open(path, "wb") as f:
+        with open(os.path.join(PHOTO_DIR, filename), "wb") as f:
             f.write(photo.getbuffer())
 
         data.append({
@@ -127,6 +122,7 @@ if st.button("업로드 ✨"):
             "time": now,
             "comments": []
         })
+
         save_data(data)
         st.success("업로드 완료 💕")
         st.rerun()
@@ -136,7 +132,7 @@ if st.button("업로드 ✨"):
 st.divider()
 
 # =====================
-# 갤러리 (타임라인)
+# 갤러리 (for문 단 하나!)
 # =====================
 st.subheader("🕒 사진 타임라인")
 
@@ -183,44 +179,29 @@ for idx, item in enumerate(data):
             save_data(data)
             st.rerun()
 
-for idx, item in enumerate(data):
-
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-
-    st.image(
-        os.path.join(PHOTO_DIR, item["file"]),
-        use_container_width=True
-    )
-
     # --------------------
-    # 삭제 (업로더만, 확인)
+    # 삭제 (업로더만)
     # --------------------
     if user == item["uploader"]:
-
         confirm_key = f"confirm_delete_{idx}"
 
         if not st.session_state.get(confirm_key, False):
             if st.button("🗑️ 사진 삭제", key=f"del_{idx}"):
                 st.session_state[confirm_key] = True
-                st.warning("⚠️ 정말 삭제하시겠습니까? (되돌릴 수 없어요)")
-
+                st.warning("⚠️ 정말 삭제하시겠습니까?")
         else:
             col1, col2 = st.columns(2)
-
             with col1:
                 if st.button("❌ 취소", key=f"cancel_{idx}"):
                     st.session_state[confirm_key] = False
-
             with col2:
-                if st.button("✅ 삭제할게요", key=f"yes_{idx}"):
+                if st.button("✅ 삭제", key=f"yes_{idx}"):
                     os.remove(os.path.join(PHOTO_DIR, item["file"]))
                     data.pop(idx)
                     save_data(data)
                     st.session_state.pop(confirm_key, None)
                     st.success("🧹 사진이 삭제되었습니다")
                     st.rerun()
-
-
 
     st.markdown("</div>", unsafe_allow_html=True)
 
