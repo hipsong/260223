@@ -183,44 +183,42 @@ for idx, item in enumerate(data):
             save_data(data)
             st.rerun()
 
-# 삭제 (업로더만, 확인 단계 포함)
-if user == item["uploader"]:
+for idx, item in enumerate(data):
 
-    confirm_key = f"confirm_delete_{idx}"
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    if not st.session_state.get(confirm_key, False):
-        if st.button("🗑️ 사진 삭제", key=f"del_{idx}"):
-            st.session_state[confirm_key] = True
-            st.warning("⚠️ 정말 삭제하시겠습니까? (되돌릴 수 없어요)")
-
-    else:
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button("❌ 취소", key=f"cancel_{idx}"):
-                st.session_state[confirm_key] = False
-
-        with col2:
-            if st.button("✅ 삭제할게요", key=f"yes_{idx}"):
-                os.remove(os.path.join(PHOTO_DIR, item["file"]))
-                data.pop(idx)
-                save_data(data)
-                st.session_state.pop(confirm_key, None)
-                st.success("🧹 사진이 삭제되었습니다")
-                st.rerun()
-    for idx, item in enumerate(data):
-
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
-        st.image(
+    st.image(
         os.path.join(PHOTO_DIR, item["file"]),
         use_container_width=True
     )
 
-    ...
-    # 💬 댓글 처리 코드 여기까지 있음
+    # --------------------
+    # 삭제 (업로더만, 확인)
+    # --------------------
+    if user == item["uploader"]:
 
-    # 👇👇👇 여기 바로 아래에 붙여야 함 👇👇👇
+        confirm_key = f"confirm_delete_{idx}"
+
+        if not st.session_state.get(confirm_key, False):
+            if st.button("🗑️ 사진 삭제", key=f"del_{idx}"):
+                st.session_state[confirm_key] = True
+                st.warning("⚠️ 정말 삭제하시겠습니까? (되돌릴 수 없어요)")
+
+        else:
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("❌ 취소", key=f"cancel_{idx}"):
+                    st.session_state[confirm_key] = False
+
+            with col2:
+                if st.button("✅ 삭제할게요", key=f"yes_{idx}"):
+                    os.remove(os.path.join(PHOTO_DIR, item["file"]))
+                    data.pop(idx)
+                    save_data(data)
+                    st.session_state.pop(confirm_key, None)
+                    st.success("🧹 사진이 삭제되었습니다")
+                    st.rerun()
 
 
 
