@@ -55,7 +55,7 @@ st.markdown(
     """
     <h1 style='text-align: center;'>👶🍼 깜짝이 추억 앨범 💕</h1>
     <p style='text-align: center; font-size:18px;'>
-    깜짝이의 하루하루를 가족의 사랑으로 기록해요 💖
+    가족의 사랑으로 기록하는 깜짝이의 하루 💖
     </p>
     """,
     unsafe_allow_html=True
@@ -89,16 +89,14 @@ if uploaded_file:
 
         image.save(filepath)
 
-        # 문구 저장
         if memo:
             with open(filepath + ".txt", "w", encoding="utf-8") as f:
                 f.write(memo)
 
-        # 업로더 저장
         with open(filepath + ".author", "w", encoding="utf-8") as f:
             f.write(st.session_state.user_name)
 
-        st.success("🎉 저장 완료! 소중한 추억이 추가됐어요 💕")
+        st.success("🎉 저장 완료! 추억이 추가됐어요 💕")
 
 st.divider()
 
@@ -113,7 +111,7 @@ files = sorted(
 )
 
 if not files:
-    st.info("아직 사진이 없어요 🥺 첫 추억을 남겨보세요!")
+    st.info("아직 사진이 없어요 🥺")
 else:
     cols = st.columns(2)
 
@@ -134,25 +132,24 @@ else:
 
             st.caption(f"✍️ 업로드: {author}")
 
-            # 기존 문구
+            # 문구
             current_memo = ""
             if os.path.exists(memo_path):
                 with open(memo_path, "r", encoding="utf-8") as f:
                     current_memo = f.read()
 
-            # ✏️ 문구 수정 (작성자만)
             if author == st.session_state.user_name:
                 new_memo = st.text_area(
                     "📝 사진 문구",
                     value=current_memo,
-                    key=f"memo_edit_{file}"
+                    key=f"memo_{file}"
                 )
 
-                if st.button("✏️ 문구 수정 저장", key=f"save_memo_{file}"):
+                if st.button("✏️ 문구 저장", key=f"save_{file}"):
                     if new_memo.strip():
                         with open(memo_path, "w", encoding="utf-8") as f:
                             f.write(new_memo)
-                        st.success("💖 문구가 수정됐어요")
+                        st.success("문구가 수정됐어요 💖")
                     else:
                         if os.path.exists(memo_path):
                             os.remove(memo_path)
@@ -160,9 +157,41 @@ else:
             else:
                 if current_memo:
                     st.caption("📝 " + current_memo)
-                st.caption("🔒 작성자만 문구를 수정할 수 있어요")
+                st.caption("🔒 작성자만 수정 가능")
 
             st.markdown("---")
+
+            # ===========================
+            # 🗑️ 사진 삭제 (작성자만 + 확인)
+            # ===========================
+            if author == st.session_state.user_name:
+                delete_key = f"delete_{file}"
+                confirm_key = f"confirm_{file}"
+
+                if st.button("🗑️ 사진 삭제", key=delete_key):
+                    st.session_state[confirm_key] = True
+
+                if st.session_state.get(confirm_key):
+                    st.warning("⚠️ 정말 삭제할까요? (되돌릴 수 없어요)")
+                    c1, c2 = st.columns(2)
+
+                    with c1:
+                        if st.button("❌ 취소", key=f"cancel_{file}"):
+                            st.session_state[confirm_key] = False
+
+                    with c2:
+                        if st.button("✅ 삭제", key=f"yes_{file}"):
+                            os.remove(img_path)
+                            if os.path.exists(memo_path):
+                                os.remove(memo_path)
+                            if os.path.exists(author_path):
+                                os.remove(author_path)
+                            if os.path.exists(comment_path):
+                                os.remove(comment_path)
+
+                            st.session_state.pop(confirm_key, None)
+                            st.success("🧹 사진이 삭제됐어요")
+                            st.rerun()
 
             # ===========================
             # 💬 댓글
@@ -192,20 +221,6 @@ else:
                 else:
                     st.warning("댓글을 입력해 주세요")
 
-            # ===========================
-            # 🗑️ 사진 삭제 (작성자만)
-            # ===========================
-            if author == st.session_state.user_name:
-                if st.button("🗑️ 사진 삭제", key=f"delete_{file}"):
-                    os.remove(img_path)
-                    if os.path.exists(memo_path):
-                        os.remove(memo_path)
-                    if os.path.exists(author_path):
-                        os.remove(author_path)
-                    if os.path.exists(comment_path):
-                        os.remove(comment_path)
-                    st.rerun()
-
 # ===========================
 # 🌈 몽글몽글 배경
 # ===========================
@@ -224,4 +239,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
