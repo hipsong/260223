@@ -183,37 +183,38 @@ for idx, item in enumerate(data):
             st.rerun()
 
     # --------------------
-    # 삭제 (업로더만 / SNS 스타일)
-    # --------------------
-    if user == item["uploader"]:
-        confirm_key = f"confirm_{idx}"
+# 삭제 (업로더만 / 원클릭 SNS 스타일)
+# --------------------
+if user == item["uploader"]:
+    confirm_key = f"confirm_{idx}"
 
-        if not st.session_state.get(confirm_key, False):
-            if st.button("🗑️ 삭제", key=f"del_{idx}"):
-                st.session_state[confirm_key] = True
+    # 삭제 버튼 (항상 보임)
+    if st.button("🗑️ 삭제", key=f"del_{idx}"):
+        st.session_state[confirm_key] = True
 
-        else:
-            st.markdown(
-                "<div style='margin-top:8px; color:#d33; font-size:14px;'>"
-                "이 사진을 삭제하시겠어요?"
-                "</div>",
-                unsafe_allow_html=True
-            )
+    # 확인 UI (즉시 표시)
+    if st.session_state.get(confirm_key, False):
+        st.markdown(
+            "<div style='margin-top:6px; font-size:14px; color:#d33;'>"
+            "이 사진을 삭제하시겠어요?"
+            "</div>",
+            unsafe_allow_html=True
+        )
 
-            col1, col2 = st.columns(2)
+        col1, col2 = st.columns([1, 1])
 
-            with col1:
-                if st.button("취소", key=f"cancel_{idx}"):
-                    st.session_state[confirm_key] = False
+        with col1:
+            if st.button("취소", key=f"cancel_{idx}"):
+                st.session_state[confirm_key] = False
 
-            with col2:
-                if st.button("삭제", key=f"confirm_del_{idx}"):
-                    os.remove(os.path.join(PHOTO_DIR, item["file"]))
-                    data.pop(idx)
-                    save_data(data)
-                    st.session_state.pop(confirm_key, None)
-                    st.success("사진이 삭제되었습니다")
-                    st.rerun()
+        with col2:
+            if st.button("삭제", key=f"confirm_del_{idx}"):
+                os.remove(os.path.join(PHOTO_DIR, item["file"]))
+                data.pop(idx)
+                save_data(data)
+                st.session_state.pop(confirm_key, None)
+                st.rerun()
+
 
     st.markdown("</div>", unsafe_allow_html=True)
 
